@@ -6,18 +6,25 @@ namespace App\Services;
 use App\Models\Group;
 use App\Models\Group_member;
 
+use App\Repositories\GroupRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class GroupService
 {
-    public function createGroup()
+
+    protected $groupRepository;
+
+    public function __construct(GroupRepository $groupRepository)
     {
-        $userId = Auth::id();
-        return Group::create([
-            'user_id' => $userId,
-        ]);
+        $this->groupRepository = $groupRepository;
     }
+
+    public function createGroup(array $data)
+    {
+        return $this->groupRepository->create($data);
+    }
+
     public function addUsersToGroup($groupId, array $userIds)
     {
         $user = Auth::user();
@@ -101,5 +108,16 @@ class GroupService
         });
 
         return response()->json($result);
+    }
+    public function getUserGroups($userId)
+    {
+
+        $ownedGroups = Group::where('user_id', $userId)->get();
+        $memberGroups = Group_member::where('user_id', $userId)
+            ->with('group')
+            ->get()
+            ->pluck('group');
+        return $ownedGroups->merge($memberGroups);
+
     }
 }

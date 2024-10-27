@@ -26,7 +26,6 @@ Route::delete('delete_user/{id}',[UserController::class,'destroy']);
 Route::group(["middleware"=>["auth:api"]],function (){
     Route::post('logout',[UserController::class,'logout']);
     Route::get('profile',[UserController::class,'profile']);
-    Route::post('get_all_user',[UserController::class,'showAllUsersExceptCurrent']);
 });
 /*عرض المستخدمين والبحث*/
 Route::get('/get_all_users', [UserController::class, 'index']);
@@ -45,7 +44,8 @@ Route::delete('reject_request/{request_id}', [RequestController::class, 'reject'
 
 /*المجموعات*/
 
-Route::post('create_groups', [GroupController::class, 'createGroup']);
+Route::post('create_groups', [GroupController::class, 'createGroup'])->middleware('auth:api');
 Route::post('add_users_for_group/{group_id}', [GroupController::class, 'addUsers'])->middleware('auth:api');
 Route::delete('remove_users_from_group/{group_id}', [GroupController::class, 'removeUser'])->middleware('auth:api');
 Route::get('get_users_in_group/{group_id}', [GroupController::class, 'getUsers'])->middleware('auth:api');
+Route::get('get_my_groups', [GroupController::class, 'index'])->middleware('auth:api');

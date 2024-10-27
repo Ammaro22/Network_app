@@ -7,6 +7,7 @@ use App\Services\GroupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Auth;
 
 class GroupController extends Controller
 {
@@ -19,13 +20,22 @@ class GroupController extends Controller
 
     public function createGroup(Request $request): JsonResponse
     {
+
         $request->validate([
-            'user_id' => 'required|exists:users,id',
+            'name' => 'required|string|max:255',
         ]);
-        $group = $this->groupService->createGroup();
+
+        $userId = Auth::id();
+        $groupData = [
+            'user_id' => $userId,
+            'name' => $request->input('name'),
+        ];
+
+        $group = $this->groupService->createGroup($groupData);
 
         return response()->json([
-            'data' => $group,
+            'message' => 'Group created successfully',
+            'group' => $group
         ], 201);
     }
 
@@ -46,6 +56,7 @@ class GroupController extends Controller
             return response()->json(['message' => $e->getMessage()], 400);
         }
     }
+
     public function getUsers($groupId)
     {
         try {
@@ -53,5 +64,12 @@ class GroupController extends Controller
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 400);
         }
+    }
+
+    public function index()
+    {
+        $userId = Auth::id();
+        $groups = $this->groupService->getUserGroups($userId);
+        return response()->json($groups);
     }
 }
