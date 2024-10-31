@@ -7,7 +7,8 @@ use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\Auth;
+
+
 
 class UserController extends Controller
 {
@@ -94,12 +95,14 @@ class UserController extends Controller
     public function destroy($id): JsonResponse
     {
         try {
-                $currentUser = Auth::user();
-                if ($currentUser->type_id !== 1) {
-                    return response()->json([
-                        'message' => 'Unauthorized. You do not have permission to delete users.',
-                    ], 403);
-                }
+
+            $userRole = auth()->user()->type_id;
+            if ($userRole !== 1) {
+                return response()->json([
+                    'message' => 'Unauthorized',
+                    'message_ar' => 'غير مصرح'
+                ], 401);
+            }
             $user = $this->userService->deleteUser($id);
 
             if ($user === null) {
@@ -113,7 +116,7 @@ class UserController extends Controller
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => $e->getMessage(),
+                'message' => 'Error: ' . $e->getMessage(),
             ], 500);
         }
     }
