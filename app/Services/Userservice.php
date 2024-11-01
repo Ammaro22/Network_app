@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Log;
 
 class Userservice
 {
+    
     protected $userRepository;
 
     public function __construct(UserRepository $userRepository)
