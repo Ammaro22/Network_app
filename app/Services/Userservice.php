@@ -26,7 +26,6 @@ class Userservice
         Log::channel('stack')->info('user sign up', [
             'user_id' => $user->id,
             'ip_address' => request()->ip(),
-            'email' => $data['email'],
             'timestamp' => now(),
 
         ]);
@@ -102,7 +101,7 @@ class Userservice
     public function getAllUsers()
     {
 
-        $users= User::select('id as user_id', 'user_name', 'full_name','email')->get();
+        $users= User::select('id as user_id', 'user_name', 'full_name')->get();
         foreach ($users as $user) {
             $userIds= $user->user_id;
             Log::channel('stack')->info('show users', [

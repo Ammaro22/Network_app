@@ -70,6 +70,6 @@ class GroupController extends Controller
     {
         $userId = Auth::id();
         $groups = $this->groupService->getUserGroups($userId);
-        return response()->json($groups);
+        return response()->json(['data'=>$groups]);
     }
 }

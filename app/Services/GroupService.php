@@ -142,7 +142,7 @@ class GroupService
             'ip_address' => request()->ip(),
             'timestamp' => now(),
         ]);
-        return response()->json($result);
+        return response()->json(['data'=>$result]);
 
     }     //log
 

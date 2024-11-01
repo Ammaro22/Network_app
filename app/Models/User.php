@@ -25,7 +25,6 @@ class User extends Authenticatable
         'user_name',
         'password',
         'type_id',
-        'email'
     ];
 
     public function type(){
