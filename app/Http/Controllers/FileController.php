@@ -47,5 +47,6 @@ class FileController extends Controller
         $perPage = $request->get('per_page', 10);
         $files = $this->fileService->getFilesByGroupId($groupId, $perPage);
         return response()->json(['data'=>$files]);
+
     }
 }

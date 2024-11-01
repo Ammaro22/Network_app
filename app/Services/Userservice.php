@@ -8,8 +8,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
-class UserService
+class Userservice
 {
+    
     protected $userRepository;
 
     public function __construct(UserRepository $userRepository)

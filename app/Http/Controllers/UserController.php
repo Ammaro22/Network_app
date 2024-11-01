@@ -3,7 +3,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\SignupRequest;
-use App\Services\UserService;
+use App\Services\Userservice;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -14,7 +14,7 @@ class UserController extends Controller
 {
     protected $userService;
 
-    public function __construct(UserService $userService)
+    public function __construct(Userservice $userService)
     {
         $this->userService = $userService;
     }
@@ -136,6 +136,7 @@ class UserController extends Controller
         $users = $this->userService->searchUserByFullName($request->user_name);
         return response()->json(['data'=>$users]);
     }
+
 }
 
 

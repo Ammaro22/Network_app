@@ -66,6 +66,7 @@ class GroupController extends Controller
         }
     }
 
+
     public function index()
     {
         $userId = Auth::id();

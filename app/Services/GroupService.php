@@ -106,7 +106,6 @@ class GroupService
                 'user_name' => $member->user->user_name,
             ];
         });
-
         return response()->json(['data'=>$result]);
     }
     public function getUserGroups($userId)
