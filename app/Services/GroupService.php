@@ -9,6 +9,7 @@ use App\Models\Group_member;
 use App\Repositories\GroupRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class GroupService
 {
@@ -20,10 +21,19 @@ class GroupService
         $this->groupRepository = $groupRepository;
     }
 
+
     public function createGroup(array $data)
     {
-        return $this->groupRepository->create($data);
-    }
+        $user= $this->groupRepository->create($data);
+        Log::channel('stack')->info('Group created successfully', [
+            'user_id' => $user->id,
+            'group_name'=>$user->name,
+            'ip_address' => request()->ip(),
+            'timestamp' => now(),
+        ]);
+        return $user;
+    }      //log
+
 
     public function addUsersToGroup($groupId, array $userIds)
     {
@@ -59,8 +69,18 @@ class GroupService
             $message .= ' The following users were already in the group: ' . implode(', ', $alreadyInGroup) . '.';
         }
 
-        return response()->json(['message' => $message, 'added_users' => $addedUsers]);
-    }
+        $response= response()->json(['message' => $message, 'added_users' => $addedUsers]);
+        Log::channel('stack')->info('Users added to group successfully.', [
+            'user_id' => $user->id,
+            'group_id'=>$group->id,
+            'group_name'=>$group->name,
+            'ip_address' => request()->ip(),
+            'timestamp' => now(),
+        ]);
+        return $response;
+    }     //log
+
+
     public function removeUserFromGroup(Request $request, $groupId)
     {
         $user = Auth::user();
@@ -82,8 +102,18 @@ class GroupService
         }
         $groupMember->delete();
 
-        return response()->json(['message' => 'User removed from group successfully.']);
-    }
+        $response= response()->json(['message' => 'User removed from group successfully.']);
+        Log::channel('stack')->info('User removed from group successfully.', [
+            'user_id' => $user->id,
+            'group_id'=>$group->id,
+            'group_name'=>$group->name,
+            'ip_address' => request()->ip(),
+            'timestamp' => now(),
+        ]);
+        return $response;
+    }      //log
+
+
     public function getUsersInGroup($groupId)
     {
         $user = Auth::user();
@@ -107,8 +137,16 @@ class GroupService
             ];
         });
 
+        Log::channel('stack')->info('show users in group', [
+            'users_list'=> $result.' '.$group->name,
+            'ip_address' => request()->ip(),
+            'timestamp' => now(),
+        ]);
         return response()->json($result);
-    }
+
+    }     //log
+
+
     public function getUserGroups($userId)
     {
 
@@ -117,7 +155,15 @@ class GroupService
             ->with('group')
             ->get()
             ->pluck('group');
+
+
+        Log::channel('stack')->info('show groups for user', [
+            'groups of user'=>$ownedGroups.' '.$memberGroups,
+            'ip_address' => request()->ip(),
+            'timestamp' => now(),
+        ]);
+
         return $ownedGroups->merge($memberGroups);
 
-    }
+    }     //log
 }

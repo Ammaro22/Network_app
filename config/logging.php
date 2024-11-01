@@ -54,11 +54,43 @@ return [
     'channels' => [
         'stack' => [
             'driver' => 'stack',
-            'channels' => ['single'],
+            'channels' => ['single','telegram','database'],
             'ignore_exceptions' => false,
         ],
 
-        'single' => [
+        'database'=>[
+            'driver'=>'custom',
+            'via' =>DatabaseLogger::class ,
+//            'handler'=>MySqlLoggingHandler::class,
+            'level' =>'debug'
+
+        ],
+        'database_mono'=>[
+            'driver'=>'monolog',
+            //'via' =>DatabaseLogger::class ,
+
+            'handler'=>MySqlLoggingHandler::class,
+            'level' =>'emergency'
+
+        ],
+
+        'telegram'=>[
+            'driver' =>'monolog',
+            'handler'=>\Monolog\Handler\TelegramBotHandler::class,
+            'with'   => [
+                'apiKey'                    => env('TELEGRAM_BOT_API_KEY'),
+                'channel'                   => env('TELEGRAM_CHANNEL_ID'),
+                'level'                     =>  'debug',
+                'bubble'                   =>true,
+                'useInlineLineBreaks'       =>true,
+                'includeContextAndExtra'    =>true,
+                'timeout'                   =>60,
+                'connectTimeout'            =>10,
+
+            ],
+
+
+            'single' => [
             'driver' => 'single',
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
@@ -128,4 +160,4 @@ return [
         ],
     ],
 
-];
+]];

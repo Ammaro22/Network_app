@@ -7,8 +7,9 @@ use App\Repositories\UserRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
-class UserService
+class Userservice
 {
     protected $userRepository;
 
@@ -17,50 +18,117 @@ class UserService
         $this->userRepository = $userRepository;
     }
 
+
     public function signup(array $data)
     {
         $data['password'] = Hash::make($data['password']);
-        return $this->userRepository->create($data);
-    }
+        $user= $this->userRepository->create($data);
+        Log::channel('stack')->info('user sign up', [
+            'user_id' => $user->id,
+            'ip_address' => request()->ip(),
+            'email' => $data['email'],
+            'timestamp' => now(),
+
+        ]);
+        return $user;
+    }   //log
+
 
     public function login(array $credentials)
     {
         if (Auth::attempt($credentials)) {
-            return Auth::user();
+            $user = Auth::user();
+            Log::channel('stack')->info('User logged in successfully', [
+                'user_id' => $user->id,
+                'user_name'=>$user->user_name,
+                'ip_address' => request()->ip(),
+                'timestamp' => now(),
+            ]);
+            return $user;
         }
 
+        Log::channel('stack')->warning('Failed login attempt', [
+            'ip_address' => request()->ip(),
+            'timestamp' => now(),
+        ]);
         return null;
+    }    //log
+
+
+    public function updateUser($id, array $data)         //log
+    {
+        Log::channel('stack')->info('user updated ',[
+            'user_id'=>$id]);
+        return  $this->userRepository->update($id, $data);;
     }
 
-    public function updateUser($id, array $data)
+
+    public function deleteUser($id)       //log
     {
-        return $this->userRepository->update($id, $data);
+        Log::channel('stack')->info('user deleted ', [
+            'user_id'=>$id]);
+        return  $this->userRepository->delete($id);
+
     }
 
-    public function deleteUser($id)
-    {
-        return $this->userRepository->delete($id);
-    }
 
     public function getUserProfile()
     {
-        return Auth::user();
-    }
+        $user= Auth::user();
+
+        Log::channel('stack')->info('logging into profile page', [
+            'user_id'=>$user->id,
+            'user_name'=>$user->user_name,
+            'ip_address' => request()->ip(),
+            'timestamp' => now(),
+        ]);
+        return $user;
+    }    //log
+
+
     public function logout($user)
     {
-        $user->token()->revoke();
-    }
+        $userLoggedOut=$user->token()->revoke();
+
+        Log::channel('stack')->info(' User logged out successfully', [
+            'user_id' => $user->id,
+            'ip_address' => request()->ip(),
+            'timestamp' => now(),
+        ]);
+       return $userLoggedOut;
+    }   //log
+
 
     public function getAllUsers()
     {
-        return User::select('id as user_id', 'user_name', 'full_name')->get();
-    }
+
+        $users= User::select('id as user_id', 'user_name', 'full_name','email')->get();
+        foreach ($users as $user) {
+            $userIds= $user->user_id;
+            Log::channel('stack')->info('show users', [
+                'user_id'=>$userIds ,
+                'ip_address' => request()->ip(),
+                'timestamp' => now(),
+            ]);
+        }
+        return $users;
+    }    /////performance
+
 
     public function searchUserByFullName($userName)
     {
-        return User::select('id as user_id', 'user_name', 'full_name')
+        $users= User::select('id as user_id', 'user_name', 'full_name')
             ->where('user_name', 'like', '%' . $userName . '%')
             ->get();
-    }
+
+      foreach ($users as $user) {
+        Log::channel('stack')->info('show user by user name', [
+          'user_name' => $user->user_name,
+          'ip_address' => request()->ip(),
+          'timestamp' => now(),
+        ]);
+        }
+        return $users;
+    }   ///////performance
 
 }

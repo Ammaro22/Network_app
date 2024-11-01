@@ -12,6 +12,7 @@ use App\Models\File_group;
 use App\Models\Group;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class FileService
@@ -24,6 +25,7 @@ class FileService
     {
         $this->fileRepository = $fileRepository;
     }
+
 
     public function uploadFiles($files, $groupId)
     {
@@ -64,7 +66,7 @@ class FileService
         } else {
             return response()->json(['message' => 'Unauthorized. You do not have permission to upload files.'], 403);
         }
-    }
+    }      //log
 
 
     public function deleteFiles($fileIds, $userId)
@@ -85,14 +87,28 @@ class FileService
 
                 $file->delete();
             }
+            Log::channel('stack')->info('delete files ', [
+                'file_id'=>$fileGroup->file_id,
+                 'user_id '=>$fileGroup->group->user_id,
+                'group_id '=>$fileGroup->group_id,
+                'ip_address' => request()->ip(),
+                'timestamp' => now(),
+            ]);
         }
 
         return response()->json(['message' => 'Files deleted successfully.']);
-    }
+    }      //log
+
 
     public function getFilesByGroupId($groupId, $perPage = 10)
     {
+        Log::channel('stack')->info('get files in group', [
+            'group_id'=>$groupId,
+            'ip_address' => request()->ip(),
+            'timestamp' => now(),
+        ]);
+
         return $this->fileRepository->getFilesByGroupId($groupId, $perPage);
-    }
+    }       //log
 
 }
