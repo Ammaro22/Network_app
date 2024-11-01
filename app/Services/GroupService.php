@@ -61,6 +61,7 @@ class GroupService
 
         return response()->json(['message' => $message, 'added_users' => $addedUsers]);
     }
+    
     public function removeUserFromGroup(Request $request, $groupId)
     {
         $user = Auth::user();
