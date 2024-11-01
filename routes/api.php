@@ -21,11 +21,12 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('signup',[UserController::class,'signup']);
 Route::post('login', [UserController::class, 'login']);
-Route::delete('delete_user/{id}',[UserController::class,'destroy']);
 
 Route::group(["middleware"=>["auth:api"]],function (){
     Route::post('logout',[UserController::class,'logout']);
     Route::get('profile',[UserController::class,'profile']);
+    Route::delete('delete_user/{id}',[UserController::class,'destroy']);
+
 });
 /*عرض المستخدمين والبحث*/
 Route::get('/get_all_users', [UserController::class, 'index']);
