@@ -26,7 +26,6 @@ class FileService
         $this->fileRepository = $fileRepository;
     }
 
-
     public function uploadFiles($files, $groupId)
     {
         $userId = Auth::id();

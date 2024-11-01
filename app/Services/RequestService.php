@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 class RequestService
 {
 
+
     public function getRequestsByGroupId($groupId)
     {
         $user = auth()->user();
@@ -83,8 +84,6 @@ class RequestService
 
         return response()->json(['message' => 'Request accepted and files moved successfully.']);
     }      //log
-
-
 
     public function rejectRequest($requestId)
     {

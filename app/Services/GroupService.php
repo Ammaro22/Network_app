@@ -118,6 +118,5 @@ class GroupService
             ->get()
             ->pluck('group');
         return $ownedGroups->merge($memberGroups);
-
     }
 }
