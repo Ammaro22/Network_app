@@ -124,7 +124,7 @@ class UserController extends Controller
     public function index()
     {
         $users = $this->userService->getAllUsers();
-        return response()->json($users);
+        return response()->json(['data'=>$users]);
     }
 
 
@@ -134,7 +134,7 @@ class UserController extends Controller
             'user_name' => 'required|string|max:255',
         ]);
         $users = $this->userService->searchUserByFullName($request->user_name);
-        return response()->json($users);
+        return response()->json(['data'=>$users]);
     }
 }
 

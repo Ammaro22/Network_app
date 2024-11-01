@@ -19,7 +19,7 @@ class RequestController extends Controller
     {
         try {
             $requests = $this->requestService->getRequestsByGroupId($groupId);
-            return response()->json($requests);
+            return response()->json(['data'=>$requests]);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 403);
         }
