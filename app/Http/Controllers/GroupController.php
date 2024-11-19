@@ -66,10 +66,27 @@ class GroupController extends Controller
         }
     }
 
-    public function index()
+    public function getGroup()
     {
         $userId = Auth::id();
-        $groups = $this->groupService->getUserGroups($userId);
+        $groups = $this->groupService->getGroupCreatedByUser($userId);
         return response()->json(['data'=>$groups]);
     }
+
+    public function getGroupUserIn()
+    {
+        $userId = Auth::id();
+        $groups = $this->groupService->getGroupUserIn($userId);
+        return response()->json(['data'=>$groups]);
+
+    }
+    public function destroy($id)
+    {
+        if ($this->groupService->deleteGroupById($id)) {
+            return response()->json(['message' => 'Group deleted successfully'], 200);
+        }
+        return response()->json(['message' => 'Group not found'], 404);
+    }
+
+
 }

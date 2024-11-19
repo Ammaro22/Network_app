@@ -10,7 +10,7 @@ class FileUploadRequest extends FormRequest
     {
         return [
             'files' => 'required|array',
-            'files.*' => 'file|mimes:jpg,jpeg,png,pdf,doc,docx',
+            'files.*' => 'file|mimes:jpg,jpeg,png,pdf,doc,docx,txt,csv,xml,zip,rar',
             'group_id' => 'required|exists:groups,id',
         ];
     }

@@ -38,24 +38,47 @@ class RequestService
         return Request::where('group_id', $groupId)->get();
     }      //log
 
-
-
     public function acceptRequest($requestId)
     {
-
         $user = Auth::user();
         $request = Request::find($requestId);
+
         if (!$request) {
             throw new \Exception('Request not found.');
         }
+
         $group = $request->group;
         if (!$group) {
             throw new \Exception('Group not found.');
         }
+
         if ($group->user_id !== $user->id) {
             throw new \Exception('Unauthorized access. You are not the owner of this group.');
         }
+
         $filesBeforeAccept = File_before_accept::where('request_id', $requestId)->get();
+
+        $filesToCheck = [];
+        foreach ($filesBeforeAccept as $fileBeforeAccept) {
+            $fileBaseName = preg_replace('/_\d+$/', '', pathinfo($fileBeforeAccept->name, PATHINFO_FILENAME));
+            $fileExtension = pathinfo($fileBeforeAccept->name, PATHINFO_EXTENSION);
+            $filesToCheck[] = ['baseName' => $fileBaseName, 'extension' => $fileExtension];
+        }
+
+        $existingFiles = File::all();
+
+        foreach ($filesToCheck as $fileToCheck) {
+            foreach ($existingFiles as $existingFile) {
+                $existingBaseName = preg_replace('/_\d+$/', '', pathinfo($existingFile->name, PATHINFO_FILENAME));
+                $existingExtension = pathinfo($existingFile->name, PATHINFO_EXTENSION);
+
+                if ($existingBaseName === $fileToCheck['baseName'] && $existingExtension === $fileToCheck['extension']) {
+                    return response()->json(['message' => "File with the same name '{$existingFile->name}' already exists. Upload failed."], 409);
+                }
+            }
+        }
+
+        $filesUploaded = [];
 
         foreach ($filesBeforeAccept as $fileBeforeAccept) {
             $file = File::create([
@@ -68,22 +91,26 @@ class RequestService
                 'file_id' => $file->id,
                 'group_id' => $request->group_id,
             ]);
+
+            $filesUploaded[] = $file;
         }
 
-        $request->delete();
-        File_before_accept::where('request_id', $requestId)->delete();
+        if (!empty($filesUploaded)) {
+            $request->delete();
+            File_before_accept::where('request_id', $requestId)->delete();
+        }
 
         Log::channel('stack')->info('accept requests', [
-            'Accepted Request Information'=>
-                ['user_id :' .$user->id,
-                 'group_id :' .$group->id,
-                ],
-                 'ip_address' => request()->ip(),
-                 'timestamp' => now(),
+            'Accepted Request Information' => [
+                'user_id :' . $user->id,
+                'group_id :' . $group->id,
+            ],
+            'ip_address' => request()->ip(),
+            'timestamp' => now(),
         ]);
 
         return response()->json(['message' => 'Request accepted and files moved successfully.']);
-    }      //log
+    }
 
     public function rejectRequest($requestId)
     {

@@ -3,8 +3,11 @@
 
 namespace App\Services;
 
+use App\Models\Change;
 use App\Models\File;
 use App\Models\File_before_accept;
+use App\Models\FileEdit;
+use App\Models\Fileold;
 use App\Models\Group_member;
 use App\Repositories\FileRepository;
 use App\Traits\Imageable;
@@ -30,14 +33,33 @@ class FileService
     {
         $userId = Auth::id();
 
-
         if (!Group::where('id', $groupId)->exists()) {
             return response()->json(['message' => 'Group not found.'], 404);
         }
+
         $isOwner = Group::where('id', $groupId)->where('user_id', $userId)->exists();
         $isMember = Group_member::where('group_id', $groupId)->where('user_id', $userId)->exists();
 
         if ($isOwner) {
+            foreach ($files as $file) {
+                $originalName = $file->getClientOriginalName();
+                $fileBaseName = preg_replace('/(_\d+)*$/', '', pathinfo($originalName, PATHINFO_FILENAME));
+                $fileExtension = pathinfo($originalName, PATHINFO_EXTENSION);
+
+                $fullFileName = $fileBaseName . '.' . $fileExtension;
+
+                $existingFiles = File::all();
+
+                foreach ($existingFiles as $existingFile) {
+                    $existingBaseName = preg_replace('/(_\d+)*$/', '', pathinfo($existingFile->name, PATHINFO_FILENAME));
+                    $existingExtension = pathinfo($existingFile->name, PATHINFO_EXTENSION);
+
+                    if ($existingBaseName === $fileBaseName && $existingExtension === $fileExtension) {
+                        return response()->json(['message' => "File '{$fullFileName}' already exists. Upload failed."], 409);
+                    }
+                }
+            }
+
             $uploadedFileIds = $this->sssave($files, $groupId);
 
             \Log::info("Uploaded file IDs: ", ['ids' => $uploadedFileIds]);
@@ -55,7 +77,6 @@ class FileService
 
             return response()->json(['message' => 'Files processed successfully.'], 200);
         } elseif ($isMember) {
-
             foreach ($files as $getFile) {
                 $request = \App\Models\Request::create(['group_id' => $groupId]);
                 $this->ssave([$getFile], $request->id);
@@ -65,8 +86,7 @@ class FileService
         } else {
             return response()->json(['message' => 'Unauthorized. You do not have permission to upload files.'], 403);
         }
-    }      //log
-
+    }
 
     public function deleteFiles($fileIds, $userId)
     {
@@ -98,7 +118,6 @@ class FileService
         return response()->json(['message' => 'Files deleted successfully.']);
     }      //log
 
-
     public function getFilesByGroupId($groupId, $perPage = 10)
     {
         Log::channel('stack')->info('get files in group', [
@@ -109,5 +128,139 @@ class FileService
 
         return $this->fileRepository->getFilesByGroupId($groupId, $perPage);
     }       //log
+
+    public function updateFile(Request $request, $filesId, $groupId)
+    {
+        try {
+            $userId = $request->user()->id;
+
+            if (!$this->isUserInGroup($groupId, $userId)) {
+                throw new \Exception("Unauthorized access to this group.", 403);
+            }
+
+            if (!$request->hasFile('files')) {
+                throw new \Exception("No files provided.", 422);
+            }
+
+            $files = $request->file('files');
+
+            $file = $this->fileRepository->findFileById($filesId);
+
+            if (!$file) {
+                throw new \Exception("File not found.", 404);
+            }
+
+            $this->fileRepository->saveOldFileRecord($file);
+            $uploadedFiles = $this->fileRepository->processFileEdits($files);
+
+            if (empty($uploadedFiles)) {
+                throw new \Exception("No file edits found. Uploaded files array is empty.", 404);
+            }
+
+            $file->delete();
+
+            foreach ($uploadedFiles as $editRecord) {
+                if (!is_object($editRecord)) {
+                    throw new \Exception("New file record not found in edits. Received: " . json_encode($editRecord), 404);
+                }
+
+                $newFile = File::create([
+                    'name' => $editRecord->name,
+                    'path' => $editRecord->path,
+                    'state' => 0
+                ]);
+
+                $this->fileRepository->addFileToGroup($newFile->id, $groupId);
+
+                $editRecord->delete();
+            }
+
+            return response()->json([
+                "message" => "File updated successfully",
+                "file" => $file
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error("Error updating file: " . $e->getMessage());
+            return response()->json([
+                "message" => "Error: " . $e->getMessage(),
+                "code" => $e->getCode()
+            ], $e->getCode() ?: 500);
+        }
+    }
+
+    public function isUserInGroup($groupId, $userId)
+    {
+        $groupMember = Group_member::where('group_id', $groupId)
+            ->where('user_id', $userId)
+            ->first();
+
+        return $groupMember !== null || Group::where('id', $groupId)
+                ->where('user_id', $userId)
+                ->exists();
+    }
+
+    public function findSimilarFiles($fileName)
+    {
+        return $this->fileRepository->getSimilarFiles($fileName);
+    }
+
+    protected function compareLargeFiles($oldFilePath, $newFilePath, $fileId, $userId)
+    {
+        $oldFileHandle = fopen($oldFilePath, 'r');
+        $newFileHandle = fopen($newFilePath, 'r');
+
+        $oldLineNumber = 1;
+        $newLineNumber = 1;
+        $userName = Auth::user()->user_name;
+
+        while (!feof($oldFileHandle) || !feof($newFileHandle)) {
+            $oldLine = fgets($oldFileHandle);
+            $newLine = fgets($newFileHandle);
+
+            if ($oldLine !== $newLine) {
+                if ($oldLine === false) {
+
+                    Change::create([
+                        'file_id' => $fileId,
+                        'old_value' => null,
+                        'new_value' => trim($newLine),
+                        'field_name' => "New Line " . $newLineNumber,
+                        'user_id' => $userId,
+                        'user_name' => $userName,
+                    ]);
+                } elseif ($newLine === false) {
+
+                    Change::create([
+                        'file_id' => $fileId,
+                        'old_value' => trim($oldLine),
+                        'new_value' => null,
+                        'field_name' => "Deleted Line " . $oldLineNumber,
+                        'user_id' => $userId,
+                        'user_name' => $userName,
+                    ]);
+                } else {
+
+                    Change::create([
+                        'file_id' => $fileId,
+                        'old_value' => trim($oldLine),
+                        'new_value' => trim($newLine),
+                        'field_name' => "Line " . $oldLineNumber,
+                        'user_id' => $userId,
+                        'user_name' => $userName,
+                    ]);
+                }
+            }
+
+            if ($oldLine !== false) {
+                $oldLineNumber++;
+            }
+            if ($newLine !== false) {
+                $newLineNumber++;
+            }
+        }
+
+        fclose($oldFileHandle);
+        fclose($newFileHandle);
+    }
 
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\FileUploadRequest;
+use App\Repositories\FileRepository;
 use App\Services\FileService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -48,4 +49,58 @@ class FileController extends Controller
         $files = $this->fileService->getFilesByGroupId($groupId, $perPage);
         return response()->json(['data'=>$files]);
     }
+
+    public function updateFile(Request $request, $id)
+    {
+        try {
+            $userId = $request->user()->id;
+            $groupId = $request->input('group_id');
+
+            $fileService = new FileService(new FileRepository());
+
+            // تحقق من صلاحيات المستخدم
+            if (!$fileService->isUserInGroup($groupId, $userId)) {
+                throw new \Exception("Unauthorized access to this group.", 403);
+            }
+
+            // تحقق من وجود الملفات في الطلب
+            if (!$request->hasFile('files')) {
+                throw new \Exception("No files provided.", 422);
+            }
+
+            // استخرج الملفات من الطلب
+            $files = $request->file('files');
+
+            // تم تعديل استدعاء الدالة هنا
+            $response = $fileService->updateFile($request, $id, $groupId);
+
+            return response()->json($response, 200);
+        } catch (\Exception $e) {
+            // تحديد كود الحالة المناسب
+            $statusCode = (int) $e->getCode();
+            if ($statusCode < 100 || $statusCode > 599) {
+                $statusCode = 500;
+            }
+
+            return response()->json(['message' => $e->getMessage()], $statusCode);
+        }
+    }
+
+    public function showSimilarFiles(Request $request)
+    {
+        $fileName = $request->input('name');
+
+        if (empty($fileName)) {
+            return response()->json(['message' => 'File name is required.'], 400);
+        }
+        $files = $this->fileService->findSimilarFiles($fileName);
+
+        if ($files->isEmpty()) {
+            return response()->json(['message' => 'No similar files found.'], 404);
+        }
+
+        return response()->json($files, 200);
+    }
+
+
 }

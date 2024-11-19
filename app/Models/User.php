@@ -34,9 +34,16 @@ class User extends Authenticatable
     public function group(){
         return $this->hasmany(Group::class,'user_id');
     }
+    public function change(){
+        return $this->hasmany(Change::class,'user_id');
+    }
 
     public function group_member(){
         return $this->hasmany(Group_member::class,'user_id');
+    }
+    public function check()
+    {
+        return $this->hasMany(Check::class, 'user_id');
     }
 
     /**

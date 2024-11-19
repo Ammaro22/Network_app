@@ -107,6 +107,7 @@ class GroupService
             'user_id' => $user->id,
             'group_id'=>$group->id,
             'group_name'=>$group->name,
+            'userRemovedId'=>$groupMember->id,
             'ip_address' => request()->ip(),
             'timestamp' => now(),
         ]);
@@ -146,24 +147,53 @@ class GroupService
 
     }     //log
 
-
-    public function getUserGroups($userId)
+    public function getGroupCreatedByUser($user_id)
     {
+        $owner = Group::where('user_id', $user_id)->get();
 
-        $ownedGroups = Group::where('user_id', $userId)->get();
-        $memberGroups = Group_member::where('user_id', $userId)
-            ->with('group')
-            ->get()
-            ->pluck('group');
+        Log::channel('stack')->info('show groups created by user', [
+            'groupsCreatedByUser'=>' '.$owner.' ',
+            'ip_address' => request()->ip(),
+            'timestamp' => now(),
+        ]);
+        return $owner;
+
+    }//log
 
 
-        Log::channel('stack')->info('show groups for user', [
-            'groups of user'=>$ownedGroups.' '.$memberGroups,
+    public function getGroupUserIn($userId)
+    {
+        $memberGroups = Group_member::where('user_id', $userId)->get();
+        Log::channel('stack')->info('show groups user in', [
+            'groupsUserIn'=>' '.$memberGroups.' ',
             'ip_address' => request()->ip(),
             'timestamp' => now(),
         ]);
 
-        return $ownedGroups->merge($memberGroups);
+        return $memberGroups;
 
-    }     //log
+
+    }//log
+
+    public function deleteGroupById($id)
+    {
+        $user = Auth::user();
+        $group = Group::find($id);
+        if (!$group) {
+            throw new \Exception('Group not found.');
+        }
+        if ($group->user_id !== $user->id) {
+            throw new \Exception('Unauthorized access. You are not the owner of this group.');
+        }
+
+        if ($group) {
+            $group->group_member()->delete();
+            $group->file_group()->delete();
+            $group->request()->delete();
+            return $group->delete();
+        }
+        return false;
+    }
+
+
 }

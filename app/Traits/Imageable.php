@@ -3,25 +3,25 @@
 namespace App\Traits;
 use App\Models\File;
 use App\Models\File_before_accept;
+use App\Models\FileEdit;
 
-//use http\Env\Request;
 
 trait Imageable
 {
 
+
     public static function sssave($getFiles, $id): array
     {
-        $uploadedFileIds = []; // مصفوفة لتخزين المعرفات
+        $uploadedFileIds = [];
 
         foreach ($getFiles as $getFile) {
             $filename = $getFile->getClientOriginalName();
             $extension = $getFile->getClientOriginalExtension();
             $name = pathinfo($filename, PATHINFO_FILENAME) . '_' . time() . '.' . $extension;
-            $path = 'file';
+            $path = 'fileEdit';
 
             $getFile->move($path, $name);
 
-            // تخزين الملف في قاعدة البيانات
             $save = File::create([
                 'name' => $name,
                 'path' => $path . '/' . $name,
@@ -29,19 +29,44 @@ trait Imageable
                 'state' => 0
             ]);
 
-            // إضافة المعرف إلى المصفوفة
+
             $uploadedFileIds[] = $save->id;
         }
 
-        return $uploadedFileIds; // إرجاع المعرفات
+        return $uploadedFileIds;
     }
+
+    public static function ssssave($getFiles): array
+    {
+        $uploadedFiles = [];
+
+        foreach ($getFiles as $getFile) {
+            $filename = $getFile->getClientOriginalName();
+            $extension = $getFile->getClientOriginalExtension();
+            $name = pathinfo($filename, PATHINFO_FILENAME) . '_' . time() . '.' . $extension;
+            $path = 'fileEdit';
+
+            $getFile->move($path, $name);
+
+            $save = FileEdit::create([
+                'name' => $name,
+                'path' => $path . '/' . $name,
+                'extension' => $extension,
+            ]);
+
+            $uploadedFiles[] = $save;
+        }
+
+        return $uploadedFiles;
+    }
+
     public static function ssave($getFiles, $id): void
     {
         foreach ($getFiles as $getFile) {
             $filename = $getFile->getClientOriginalName();
             $extension = $getFile->getClientOriginalExtension();
             $name = pathinfo($filename, PATHINFO_FILENAME) . '_' . time() . '.' . $extension;
-            $path = 'file';
+            $path = 'fileEdit';
 
             $getFile->move($path, $name);
 
@@ -54,6 +79,7 @@ trait Imageable
             ]);
         }
     }
+
 
 }
 

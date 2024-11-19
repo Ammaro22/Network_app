@@ -20,4 +20,15 @@ class File extends Model
     public function file_group(){
         return $this->hasmany(File_group::class,'file_id');
     }
+    public function check()
+    {
+        return $this->hasMany(Check::class, 'file_id');
+    }
+
+    public function change()
+    {
+        return $this->hasMany(Change::class, 'file_id');
+    }
+
+
 }

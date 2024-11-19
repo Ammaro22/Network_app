@@ -1,6 +1,7 @@
 <?php
 
 
+use App\Http\Controllers\CheckController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\RequestController;
@@ -49,4 +50,17 @@ Route::post('create_groups', [GroupController::class, 'createGroup'])->middlewar
 Route::post('add_users_for_group/{group_id}', [GroupController::class, 'addUsers'])->middleware('auth:api');
 Route::delete('remove_users_from_group/{group_id}', [GroupController::class, 'removeUser'])->middleware('auth:api');
 Route::get('get_users_in_group/{group_id}', [GroupController::class, 'getUsers'])->middleware('auth:api');
-Route::get('get_my_groups', [GroupController::class, 'index'])->middleware('auth:api');
+Route::get('get_GroupCreated_By_User', [GroupController::class, 'getGroup'])->middleware('auth:api');
+Route::get('get_GroupUserIn', [GroupController::class, 'getGroupUserIn'])->middleware('auth:api');
+Route::delete('delete_groups/{group_id}', [GroupController::class, 'destroy'])->middleware('auth:api');
+
+
+/*check in && check out*/
+Route::post('checkin', [CheckController::class, 'checkIn'])->middleware('auth:api');
+Route::post('checkout', [CheckController::class, 'checkOut'])->middleware('auth:api');
+Route::get('get_checks', [CheckController::class, 'getGroupChecks'])->middleware('auth:api');
+
+/*تعديل الملف وحفط نسخة قديمة*/
+Route::post('update_files/{id}', [FileController::class, 'updateFile'])->middleware('auth:api');
+/*عرض الاصدارات القديمة من اسم الملف*/
+Route::post('get_old_version_from_file', [FileController::class, 'showSimilarFiles']);
