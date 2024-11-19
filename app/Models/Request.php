@@ -13,6 +13,7 @@ class Request extends Model
     public $timestamps = true;
     protected $fillable = [
         'group_id',
+        'user_name'
     ];
 
     public function group(){

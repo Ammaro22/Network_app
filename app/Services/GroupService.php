@@ -6,6 +6,7 @@ namespace App\Services;
 use App\Models\Group;
 use App\Models\Group_member;
 
+use App\Models\User;
 use App\Repositories\GroupRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -150,13 +151,17 @@ class GroupService
     public function getGroupCreatedByUser($user_id)
     {
         $owner = Group::where('user_id', $user_id)->get();
+        $user = User::find($user_id);
+        $userName = $user ? $user->user_name : 'Unknown User';
+
 
         Log::channel('stack')->info('show groups created by user', [
             'groupsCreatedByUser'=>' '.$owner.' ',
             'ip_address' => request()->ip(),
             'timestamp' => now(),
         ]);
-        return $owner;
+        return[ 'username'=>$userName,
+            'group'=>$owner];
 
     }//log
 
@@ -164,15 +169,29 @@ class GroupService
     public function getGroupUserIn($userId)
     {
         $memberGroups = Group_member::where('user_id', $userId)->get();
+        $user = User::find($userId);
+        $userName = $user ? $user->user_name : 'Unknown User';
+
         Log::channel('stack')->info('show groups user in', [
+            'userName' => $userName,
             'groupsUserIn'=>' '.$memberGroups.' ',
             'ip_address' => request()->ip(),
             'timestamp' => now(),
         ]);
 
-        return $memberGroups;
+        $groupDetails = $memberGroups->map(function ($group) use ($userName) {
+            return [
+                'id' => $group->id,
+                'user_id' => $group->user_id,
+                'userName' => $userName,
+                'group_id' => $group->group_id,
+                'created_at' => $group->created_at,
+                'updated_at' => $group->updated_at,
+            ];
+        });
 
 
+        return $groupDetails;
     }//log
 
     public function deleteGroupById($id)

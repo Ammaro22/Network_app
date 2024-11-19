@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\GroupRequest;
+use App\Models\Group;
 use App\Services\GroupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,15 +21,21 @@ class GroupController extends Controller
 
     public function createGroup(Request $request): JsonResponse
     {
-
         $request->validate([
             'name' => 'required|string|max:255',
         ]);
 
         $userId = Auth::id();
+        $groupName = $request->input('name');
+
+        // تحقق من وجود مجموعة بنفس الاسم
+        if (Group::where('name', $groupName)->exists()) {
+            return response()->json(['message' => 'A group with the same name already exists.'], 409);
+        }
+
         $groupData = [
             'user_id' => $userId,
-            'name' => $request->input('name'),
+            'name' => $groupName,
         ];
 
         $group = $this->groupService->createGroup($groupData);

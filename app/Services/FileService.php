@@ -9,6 +9,7 @@ use App\Models\File_before_accept;
 use App\Models\FileEdit;
 use App\Models\Fileold;
 use App\Models\Group_member;
+use App\Models\User;
 use App\Repositories\FileRepository;
 use App\Traits\Imageable;
 use App\Models\File_group;
@@ -32,6 +33,9 @@ class FileService
     public function uploadFiles($files, $groupId)
     {
         $userId = Auth::id();
+        $user = User::find($userId);
+        $userName = $user ? $user->user_name : 'Unknown User';
+
 
         if (!Group::where('id', $groupId)->exists()) {
             return response()->json(['message' => 'Group not found.'], 404);
@@ -78,7 +82,7 @@ class FileService
             return response()->json(['message' => 'Files processed successfully.'], 200);
         } elseif ($isMember) {
             foreach ($files as $getFile) {
-                $request = \App\Models\Request::create(['group_id' => $groupId]);
+                $request = \App\Models\Request::create(['group_id' => $groupId,'user_name'=>$userName]);
                 $this->ssave([$getFile], $request->id);
             }
 
