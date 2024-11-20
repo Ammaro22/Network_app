@@ -67,7 +67,7 @@ class GroupController extends Controller
     public function getUsers($groupId)
     {
         try {
-            return $this->groupService->getUsersInGroup($groupId);
+            return $this->groupService->getUserGroups($groupId);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 400);
         }

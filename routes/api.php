@@ -49,7 +49,7 @@ Route::delete('reject_request/{request_id}', [RequestController::class, 'reject'
 Route::post('create_groups', [GroupController::class, 'createGroup'])->middleware('auth:api');
 Route::post('add_users_for_group/{group_id}', [GroupController::class, 'addUsers'])->middleware('auth:api');
 Route::delete('remove_users_from_group/{group_id}', [GroupController::class, 'removeUser'])->middleware('auth:api');
-Route::get('get_users_in_group/{group_id}', [GroupController::class, 'getUsers'])->middleware('auth:api');
+Route::get('get_all_groups_for_user/{group_id}', [GroupController::class, 'getUsers'])->middleware('auth:api');
 Route::get('get_GroupCreated_By_User', [GroupController::class, 'getGroup'])->middleware('auth:api');
 Route::get('get_GroupUserIn', [GroupController::class, 'getGroupUserIn'])->middleware('auth:api');
 Route::delete('delete_groups/{group_id}', [GroupController::class, 'destroy'])->middleware('auth:api');

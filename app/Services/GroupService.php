@@ -116,37 +116,27 @@ class GroupService
     }      //log
 
 
-    public function getUsersInGroup($groupId)
+    public function getUserGroups($userId)
     {
-        $user = Auth::user();
-        $group = Group::find($groupId);
-        if (!$group) {
-            throw new \Exception('Group not found.');
-        }
-        if ($group->user_id !== $user->id) {
-            throw new \Exception('Unauthorized access. You are not the owner of this group.');
-        }
-        $members = Group_member::where('group_id', $groupId)
-            ->with('user:id,full_name,user_name')
-            ->get();
 
-        $result = $members->map(function ($member) {
-            return [
-                'user_id' => $member->user_id,
-                'group_id' => $member->group_id,
-                'full_name' => $member->user->full_name,
-                'user_name' => $member->user->user_name,
-            ];
-        });
+        $ownedGroups = Group::where('user_id', $userId)->get();
+        $memberGroups = Group_member::where('user_id', $userId)
+            ->with('group')
+            ->get()
+            ->pluck('group');
 
-        Log::channel('stack')->info('show users in group', [
-            'users_list'=> $result.' '.$group->name,
+        $result = $ownedGroups->merge($memberGroups);
+
+        Log::channel('stack')->info('Show users in group', [
+            'user_id' => $userId,
+            'owned_groups_count' => $ownedGroups->count(),
+            'member_groups_count' => $memberGroups->count(),
             'ip_address' => request()->ip(),
             'timestamp' => now(),
         ]);
-        return response()->json(['data'=>$result]);
 
-    }     //log
+        return $result;
+    }
 
     public function getGroupCreatedByUser($user_id)
     {
