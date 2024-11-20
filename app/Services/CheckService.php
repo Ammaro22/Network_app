@@ -67,6 +67,7 @@ class CheckService
             return [
                 'id' => $check->id,
                 'user_id' => $check->user_id,
+                'user_name' => $check->user ? $check->user->user_name : null,
                 'file_id' => $check->file_id,
                 'type_check' => $check->type_check,
                 'created_at' => $check->created_at->format('Y-m-d H:i:s'),
