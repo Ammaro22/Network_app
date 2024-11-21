@@ -36,7 +36,6 @@ class FileService
         $user = User::find($userId);
         $userName = $user ? $user->user_name : 'Unknown User';
 
-
         if (!Group::where('id', $groupId)->exists()) {
             return response()->json(['message' => 'Group not found.'], 404);
         }
@@ -49,17 +48,18 @@ class FileService
                 $originalName = $file->getClientOriginalName();
                 $fileBaseName = preg_replace('/(_\d+)*$/', '', pathinfo($originalName, PATHINFO_FILENAME));
                 $fileExtension = pathinfo($originalName, PATHINFO_EXTENSION);
-
                 $fullFileName = $fileBaseName . '.' . $fileExtension;
 
-                $existingFiles = File::all();
+                $existingFilesInGroup = File_group::where('group_id', $groupId)
+                    ->join('files', 'file_groups.file_id', '=', 'files.id')
+                    ->get(['files.name']);
 
-                foreach ($existingFiles as $existingFile) {
+                foreach ($existingFilesInGroup as $existingFile) {
                     $existingBaseName = preg_replace('/(_\d+)*$/', '', pathinfo($existingFile->name, PATHINFO_FILENAME));
                     $existingExtension = pathinfo($existingFile->name, PATHINFO_EXTENSION);
 
                     if ($existingBaseName === $fileBaseName && $existingExtension === $fileExtension) {
-                        return response()->json(['message' => "File '{$fullFileName}' already exists. Upload failed."], 409);
+                        return response()->json(['message' => "File '{$fullFileName}' already exists in this group. Upload failed."], 409);
                     }
                 }
             }
@@ -82,7 +82,7 @@ class FileService
             return response()->json(['message' => 'Files processed successfully.'], 200);
         } elseif ($isMember) {
             foreach ($files as $getFile) {
-                $request = \App\Models\Request::create(['group_id' => $groupId,'user_name'=>$userName]);
+                $request = \App\Models\Request::create(['group_id' => $groupId, 'user_name' => $userName]);
                 $this->ssave([$getFile], $request->id);
             }
 
