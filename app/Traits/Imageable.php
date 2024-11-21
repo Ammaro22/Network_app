@@ -72,7 +72,7 @@ trait Imageable
 
             $save = File_before_accept::create([
                 'name' => $name,
-                'path' => $path,
+                'path' => $path . '/' . $name,
                 'extension' => $extension,
                 'state'=>0,
                 'request_id'=>$id

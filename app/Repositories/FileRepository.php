@@ -59,12 +59,12 @@ class FileRepository
     public function saveOldFileRecord($file)
     {
 
+        $newName = pathinfo($file->name, PATHINFO_FILENAME) . '_v1.' . pathinfo($file->name, PATHINFO_EXTENSION);
+
         $oldFileRecord = new Fileold();
-        $oldFileRecord->name = $file->name;
-        $oldFileRecord->path = 'file/' . $file->name;
+        $oldFileRecord->name = $newName;
+        $oldFileRecord->path = 'file/' . $newName;
         $oldFileRecord->save();
-
-
         $destinationPath = public_path('file');
         $sourcePath = $file->path;
 
