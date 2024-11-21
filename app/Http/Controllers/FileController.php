@@ -58,25 +58,22 @@ class FileController extends Controller
 
             $fileService = new FileService(new FileRepository());
 
-            // تحقق من صلاحيات المستخدم
             if (!$fileService->isUserInGroup($groupId, $userId)) {
                 throw new \Exception("Unauthorized access to this group.", 403);
             }
 
-            // تحقق من وجود الملفات في الطلب
             if (!$request->hasFile('files')) {
                 throw new \Exception("No files provided.", 422);
             }
 
-            // استخرج الملفات من الطلب
             $files = $request->file('files');
 
-            // تم تعديل استدعاء الدالة هنا
+
             $response = $fileService->updateFile($request, $id, $groupId);
 
             return response()->json($response, 200);
         } catch (\Exception $e) {
-            // تحديد كود الحالة المناسب
+
             $statusCode = (int) $e->getCode();
             if ($statusCode < 100 || $statusCode > 599) {
                 $statusCode = 500;

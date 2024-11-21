@@ -153,7 +153,9 @@ class FileService
             if (!$file) {
                 throw new \Exception("File not found.", 404);
             }
-
+            if ($file->state !== 1) {
+                throw new \Exception("The file is not reserved for editing.", 403);
+            }
             $this->fileRepository->saveOldFileRecord($file);
             $uploadedFiles = $this->fileRepository->processFileEdits($files);
 
@@ -171,7 +173,7 @@ class FileService
                 $newFile = File::create([
                     'name' => $editRecord->name,
                     'path' => $editRecord->path,
-                    'state' => 0
+                    'state' => 1
                 ]);
 
                 $this->fileRepository->addFileToGroup($newFile->id, $groupId);

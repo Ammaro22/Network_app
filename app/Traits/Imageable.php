@@ -26,7 +26,7 @@ trait Imageable
                 'name' => $name,
                 'path' => $path . '/' . $name,
                 'extension' => $extension,
-                'state' => 0
+                'state' => 1
             ]);
 
 
