@@ -115,17 +115,50 @@ class GroupService
         return $response;
     }      //log
 
+    public function getUsersInGroup($groupId)
+    {
+        $user = Auth::user();
+        $group = Group::find($groupId);
+        if (!$group) {
+            throw new \Exception('Group not found.');
+        }
+        if ($group->user_id !== $user->id) {
+            throw new \Exception('Unauthorized access. You are not the owner of this group.');
+        }
+        $members = Group_member::where('group_id', $groupId)
+            ->with('user:id,full_name,user_name')
+            ->get();
+
+        $result = $members->map(function ($member) {
+            return [
+                'user_id' => $member->user_id,
+                'group_id' => $member->group_id,
+                'full_name' => $member->user->full_name,
+                'user_name' => $member->user->user_name,
+            ];
+        });
+
+        Log::channel('stack')->info('show users in group', [
+            'users_list'=> $result.' '.$group->name,
+            'ip_address' => request()->ip(),
+            'timestamp' => now(),
+        ]);
+        return response()->json(['data'=>$result]);
+
+    }     //log
 
     public function getUserGroups($userId)
     {
-
         $ownedGroups = Group::where('user_id', $userId)->get();
         $memberGroups = Group_member::where('user_id', $userId)
             ->with('group')
             ->get()
             ->pluck('group');
 
-        $result = $ownedGroups->merge($memberGroups);
+        $resultGroups = $ownedGroups->merge($memberGroups);
+
+        $user = User::find($userId);
+        $userName = $user ? $user->user_name : 'Unknown User';
 
         Log::channel('stack')->info('Show users in group', [
             'user_id' => $userId,
@@ -135,8 +168,13 @@ class GroupService
             'timestamp' => now(),
         ]);
 
-        return $result;
-    }
+        return response()->json([
+            'data' => [
+                'username' => $userName,
+                'group' => $resultGroups,
+            ],
+        ]);
+    } //log
 
     public function getGroupCreatedByUser($user_id)
     {
