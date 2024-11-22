@@ -102,10 +102,9 @@ class FileService
             if ($fileGroup->group->user_id != $userId) {
                 return response()->json(['message' => 'Unauthorized. You do not own this group.'], 403);
             }
-            
+
             $file = File::find($fileGroup->file_id);
             if ($file) {
-
                 if ($file->state == 1) {
                     return response()->json(['message' => 'Cannot delete file. It is currently reserved.'], 403);
                 }
