@@ -86,14 +86,16 @@ class FileController extends Controller
     public function showSimilarFiles(Request $request)
     {
         $fileName = $request->input('name');
+        $groupId = $request->input('group_id');
 
-        if (empty($fileName)) {
-            return response()->json(['message' => 'File name is required.'], 400);
+        if (empty($fileName) || empty($groupId)) {
+            return response()->json(['message' => 'File name and group ID are required.'], 400);
         }
-        $files = $this->fileService->findSimilarFiles($fileName);
+
+        $files = $this->fileService->findSimilarFiles($fileName, $groupId);
 
         if ($files->isEmpty()) {
-            return response()->json(['message' => 'No similar files found.'], 404);
+            return response()->json(['message' => 'No similar files found in the specified group.'], 404);
         }
 
         return response()->json($files, 200);

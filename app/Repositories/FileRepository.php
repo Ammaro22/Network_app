@@ -76,9 +76,8 @@ class FileRepository
         rename($sourcePath, $newFilePath);
     }
 
-    public function getSimilarFiles($fileName)
+    public function getSimilarFiles($fileName, $groupId)
     {
-
         $baseName = pathinfo($fileName, PATHINFO_FILENAME);
         $extension = pathinfo($fileName, PATHINFO_EXTENSION);
 
@@ -86,6 +85,9 @@ class FileRepository
 
         return Fileold::where('name', 'like', $cleanBaseName . '%')
             ->where('name', 'like', '%' . $extension)
+            ->whereHas('file_group', function($query) use ($groupId) {
+                $query->where('group_id', $groupId);
+            })
             ->get();
     }
 

@@ -95,33 +95,38 @@ class FileService
 
     public function deleteFiles($fileIds, $userId)
     {
-
         $fileGroups = File_group::whereIn('file_id', $fileIds)->with('group')->get();
 
         foreach ($fileGroups as $fileGroup) {
+            // التحقق من ملكية المجموعة
             if ($fileGroup->group->user_id != $userId) {
                 return response()->json(['message' => 'Unauthorized. You do not own this group.'], 403);
+            }
+            
+            $file = File::find($fileGroup->file_id);
+            if ($file) {
+
+                if ($file->state == 1) {
+                    return response()->json(['message' => 'Cannot delete file. It is currently reserved.'], 403);
+                }
+
+                Storage::delete($file->path);
+                $file->delete();
             }
 
             $fileGroup->delete();
 
-            $file = File::find($fileGroup->file_id);
-            if ($file) {
-                Storage::delete($file->path);
-
-                $file->delete();
-            }
             Log::channel('stack')->info('delete files ', [
-                'file_id'=>$fileGroup->file_id,
-                 'user_id '=>$fileGroup->group->user_id,
-                'group_id '=>$fileGroup->group_id,
+                'file_id' => $fileGroup->file_id,
+                'user_id' => $fileGroup->group->user_id,
+                'group_id' => $fileGroup->group_id,
                 'ip_address' => request()->ip(),
                 'timestamp' => now(),
             ]);
         }
 
         return response()->json(['message' => 'Files deleted successfully.']);
-    }      //log
+    }
 
     public function getFilesByGroupId($groupId, $perPage = 10)
     {
@@ -287,9 +292,10 @@ class FileService
                 ->exists();
     }
 
-    public function findSimilarFiles($fileName)
+
+    public function findSimilarFiles($fileName, $groupId)
     {
-        return $this->fileRepository->getSimilarFiles($fileName);
+        return $this->fileRepository->getSimilarFiles($fileName, $groupId);
     }
 
     protected function compareLargeFiles($oldFilePath, $newFilePath, $fileId, $userId)
