@@ -1,6 +1,7 @@
 <?php
 namespace App\Services;
 
+use App\Models\Check;
 use App\Repositories\CheckRepository;
 use Illuminate\Support\Facades\Auth;
 
@@ -39,12 +40,23 @@ class CheckService
         if (!$user) {
             throw new \Exception('Unauthorized', 401);
         }
+
         if (empty($fileIds) || !is_array($fileIds)) {
             throw new \Exception('File IDs are required and should be an array', 400);
         }
+
         foreach ($fileIds as $fileId) {
+            $checkInRecord = Check::where('file_id', $fileId)
+                ->where('user_id', $user->id)
+                ->where('type_check', 'checkin')
+                ->first();
+
+            if (!$checkInRecord) {
+                throw new \Exception("User is not authorized to check out file with ID {$fileId}. No check-in record found.", 403);
+            }
             $this->checkRepository->createCheck($user->id, $fileId, 'checkout');
         }
+
         $this->checkRepository->updateFileState($fileIds, 0);
     }
 

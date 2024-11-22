@@ -33,7 +33,7 @@ class CheckController extends Controller
             $this->checkService->checkOut($fileIds);
             return response()->json(['message' => 'Check-outs recorded successfully']);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], $e->getCode());
+            return response()->json(['message' => $e->getMessage()], $e->getCode() ?: 500);
         }
     }
 
