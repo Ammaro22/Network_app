@@ -4,6 +4,7 @@
 namespace App\Services;
 
 use App\Models\Change;
+use App\Models\Check;
 use App\Models\File;
 use App\Models\File_before_accept;
 use App\Models\FileEdit;
@@ -133,6 +134,77 @@ class FileService
         return $this->fileRepository->getFilesByGroupId($groupId, $perPage);
     }       //log
 
+//    public function updateFile(Request $request, $filesId, $groupId)
+//    {
+//        try {
+//            $userId = $request->user()->id;
+//
+//            if (!$this->isUserInGroup($groupId, $userId)) {
+//                throw new \Exception("Unauthorized access to this group.", 403);
+//            }
+//
+//            if (!$request->hasFile('files')) {
+//                throw new \Exception("No files provided.", 422);
+//            }
+//
+//            $files = $request->file('files');
+//
+//            $file = $this->fileRepository->findFileById($filesId);
+//
+//            if (!$file) {
+//                throw new \Exception("File not found.", 404);
+//            }
+//            if ($file->state !== 1) {
+//                throw new \Exception("The file is not reserved for editing.", 403);
+//            }
+//            if ($file->state == 1) {
+//
+//                $checkInRecord = Check::where('file_id', $filesId)
+//                    ->where('user_id', $file->checked_out_by)
+//                    ->where('type_check', 'checkin')
+//                    ->first();
+//
+//                if (!$checkInRecord || $checkInRecord->user_id !== $userId) {
+//                    throw new \Exception("The file is not reserved for editing by you.", 403);
+//                }
+//            }
+//            $this->fileRepository->saveOldFileRecord($file);
+//            $uploadedFiles = $this->fileRepository->processFileEdits($files);
+//
+//            if (empty($uploadedFiles)) {
+//                throw new \Exception("No file edits found. Uploaded files array is empty.", 404);
+//            }
+//
+//            $file->delete();
+//
+//            foreach ($uploadedFiles as $editRecord) {
+//                if (!is_object($editRecord)) {
+//                    throw new \Exception("New file record not found in edits. Received: " . json_encode($editRecord), 404);
+//                }
+//
+//                $newFile = File::create([
+//                    'name' => $editRecord->name,
+//                    'path' => $editRecord->path,
+//                    'state' => 1
+//                ]);
+//
+//                $this->fileRepository->addFileToGroup($newFile->id, $groupId);
+//
+//                $editRecord->delete();
+//            }
+//
+//            return response()->json([
+//                "message" => "File updated successfully",
+//                "file" => $file
+//            ], 200);
+//        } catch (\Exception $e) {
+//            Log::error("Error updating file: " . $e->getMessage());
+//            return response()->json([
+//                "message" => "Error: " . $e->getMessage(),
+//                "code" => $e->getCode()
+//            ], $e->getCode() ?: 500);
+//        }
+//    }
     public function updateFile(Request $request, $filesId, $groupId)
     {
         try {
@@ -149,13 +221,23 @@ class FileService
             $files = $request->file('files');
 
             $file = $this->fileRepository->findFileById($filesId);
-
             if (!$file) {
                 throw new \Exception("File not found.", 404);
             }
+
             if ($file->state !== 1) {
                 throw new \Exception("The file is not reserved for editing.", 403);
             }
+
+            $checkInRecord = Check::where('file_id', $filesId)
+                ->where('user_id', $userId)
+                ->where('type_check', 'checkin')
+                ->first();
+
+            if (!$checkInRecord || $checkInRecord->user_id !== $userId) {
+                throw new \Exception("The file is not reserved for editing by you.", 403);
+            }
+
             $this->fileRepository->saveOldFileRecord($file);
             $uploadedFiles = $this->fileRepository->processFileEdits($files);
 
