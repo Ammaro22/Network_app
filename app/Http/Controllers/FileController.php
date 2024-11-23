@@ -85,7 +85,7 @@ class FileController extends Controller
 
     public function showSimilarFiles(Request $request)
     {
-        $fileName = $request->input('name');
+        $fileName = trim($request->input('name'));
         $groupId = $request->input('group_id');
 
         if (empty($fileName) || empty($groupId)) {
@@ -98,7 +98,7 @@ class FileController extends Controller
             return response()->json(['message' => 'No similar files found in the specified group.'], 404);
         }
 
-        return response()->json(['data'=>$files], 200);
+        return response()->json(['data' => $files], 200);
     }
 
 

@@ -15,9 +15,11 @@ class Fileold extends Model
     protected $fillable = [
         'name',
         'path',
+        'group_id'
     ];
-    public function file_group()
+
+    public function group()
     {
-        return $this->hasMany(File_group::class, 'file_id');
+        return $this->belongsTo(Group::class, 'group_id');
     }
 }

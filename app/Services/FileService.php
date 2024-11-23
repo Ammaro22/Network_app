@@ -172,7 +172,7 @@ class FileService
                 throw new \Exception("The file is not reserved for editing by you.", 403);
             }
 
-            $this->fileRepository->saveOldFileRecord($file);
+            $this->fileRepository->saveOldFileRecord($file, $groupId);
             $uploadedFiles = $this->fileRepository->processFileEdits($files);
 
             if (empty($uploadedFiles)) {

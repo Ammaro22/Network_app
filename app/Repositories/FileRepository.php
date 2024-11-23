@@ -6,6 +6,7 @@ use App\Models\File_group;
 use App\Models\Fileold;
 use App\Models\Group;
 use App\Traits\Imageable;
+use Illuminate\Support\Facades\Log;
 
 class FileRepository
 {
@@ -56,15 +57,43 @@ class FileRepository
         return $uploadedFiles;
     }
 
-    public function saveOldFileRecord($file)
+//    public function saveOldFileRecord($file)
+//    {
+//
+//        $newName = pathinfo($file->name, PATHINFO_FILENAME) . '_v1.' . pathinfo($file->name, PATHINFO_EXTENSION);
+//
+//        $oldFileRecord = new Fileold();
+//        $oldFileRecord->name = $newName;
+//        $oldFileRecord->path = 'file/' . $newName;
+//        $oldFileRecord->save();
+//        $destinationPath = public_path('file');
+//        $sourcePath = $file->path;
+//
+//        if (!file_exists($destinationPath)) {
+//            mkdir($destinationPath, 0755, true);
+//        }
+//
+//        $newFilePath = $destinationPath . '/' . $file->name;
+//        rename($sourcePath, $newFilePath);
+//    }
+    public function saveOldFileRecord($file, $groupId)
     {
+        $filename = pathinfo($file->name, PATHINFO_FILENAME);
+        $extension = pathinfo($file->name, PATHINFO_EXTENSION);
 
-        $newName = pathinfo($file->name, PATHINFO_FILENAME) . '_v1.' . pathinfo($file->name, PATHINFO_EXTENSION);
+        $version = 1;
+        do {
+            $newName = $filename . '_v' . $version . '.' . $extension;
+            $newPath = public_path('file/' . $newName);
+            $version++;
+        } while (file_exists($newPath));
 
         $oldFileRecord = new Fileold();
         $oldFileRecord->name = $newName;
         $oldFileRecord->path = 'file/' . $newName;
+        $oldFileRecord->group_id = $groupId;
         $oldFileRecord->save();
+
         $destinationPath = public_path('file');
         $sourcePath = $file->path;
 
@@ -72,22 +101,38 @@ class FileRepository
             mkdir($destinationPath, 0755, true);
         }
 
-        $newFilePath = $destinationPath . '/' . $file->name;
+        $newFilePath = $destinationPath . '/' . $newName;
         rename($sourcePath, $newFilePath);
     }
 
+
+//    public function getSimilarFiles($fileName, $groupId)
+//    {
+//        $baseName = pathinfo($fileName, PATHINFO_FILENAME);
+//        $extension = pathinfo($fileName, PATHINFO_EXTENSION);
+//
+//        $cleanBaseName = preg_replace('/_\d+$/', '', $baseName);
+//
+//        return Fileold::where('name', 'like', $cleanBaseName . '%')
+//            ->where('name', 'like', '%' . $extension)
+//            ->whereHas('file_group', function($query) use ($groupId) {
+//                $query->where('group_id', $groupId);
+//            })
+//            ->get();
+//    }
     public function getSimilarFiles($fileName, $groupId)
     {
+
         $baseName = pathinfo($fileName, PATHINFO_FILENAME);
         $extension = pathinfo($fileName, PATHINFO_EXTENSION);
 
-        $cleanBaseName = preg_replace('/_\d+$/', '', $baseName);
+        $cleanBaseName = preg_replace('/(_v\d+)?$/', '', $baseName);
 
         return Fileold::where('name', 'like', $cleanBaseName . '%')
-            ->where('name', 'like', '%' . $extension)
-            ->whereHas('file_group', function($query) use ($groupId) {
-                $query->where('group_id', $groupId);
-            })
+        ->where('name', 'like', '%' . $extension)
+        ->whereHas('group', function($query) use ($groupId) {
+            $query->where('group_id', $groupId);
+        })
             ->get();
     }
 

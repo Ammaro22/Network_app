@@ -14,7 +14,7 @@ class Group extends Model
     protected $fillable = [
         'user_id',
         'name'
-        
+
     ];
     public function user(){
         return $this->belongsTo(User::class,'user_id');
@@ -28,4 +28,8 @@ class Group extends Model
     public function request(){
         return $this->hasmany(Request::class,'group_id');
     }
+    public function file_old(){
+        return $this->hasmany(Fileold::class,'group_id');
+    }
+
 }

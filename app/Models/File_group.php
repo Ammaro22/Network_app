@@ -17,7 +17,7 @@ class File_group extends Model
     ];
 
     public function file(){
-        return $this->belongsTo(User::class,'file_id');
+        return $this->belongsTo(File::class,'file_id');
     }
 
     public function group(){
