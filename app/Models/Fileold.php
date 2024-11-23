@@ -16,4 +16,8 @@ class Fileold extends Model
         'name',
         'path',
     ];
+    public function file_group()
+    {
+        return $this->hasMany(File_group::class, 'file_id');
+    }
 }
