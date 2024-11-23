@@ -193,6 +193,13 @@ class FileService
                 ]);
 
                 $this->fileRepository->addFileToGroup($newFile->id, $groupId);
+                Check::create([
+                    'file_id' => $newFile->id,
+                    'user_id' => $userId,
+                    'type_check' => 'checkin',
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
 
                 $editRecord->delete();
             }
