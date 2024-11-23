@@ -98,7 +98,7 @@ class FileController extends Controller
             return response()->json(['message' => 'No similar files found in the specified group.'], 404);
         }
 
-        return response()->json($files, 200);
+        return response()->json(['data'=>$files], 200);
     }
 
 
