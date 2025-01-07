@@ -22,4 +22,7 @@ class Fileold extends Model
     {
         return $this->belongsTo(Group::class, 'group_id');
     }
+    public function change(){
+        return $this->hasmany(Change::class,'file_old_id');
+    }
 }

@@ -24,5 +24,9 @@ class CheckRepository
     {
         return Check::whereIn('file_id', $fileGroupIds)->with(['file'])->get();
     }
+    public function getFilesByIds(array $fileIds)
+    {
+        return File::whereIn('id', $fileIds)->get();
+    }
 
 }

@@ -13,17 +13,24 @@ class Change extends Model
     public $timestamps = true;
 
     protected $fillable = [
-        'file_id',
-        'old_value',
-        'new_value',
-        'field_name',
-        'user_id',
-        'user_name'
+        'change',
+        'file_old_name',
+        'file_new_name',
+        'user_name',
+        'date_checkin',
+        'file_old_id'
     ];
+
     public function file()
     {
         return $this->belongsTo(File::class, 'file_id');
     }
+
+    public function fileold()
+    {
+        return $this->belongsTo(Fileold::class, 'file_old_id');
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');

@@ -7,7 +7,7 @@ use App\Services\Userservice;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-
+use Illuminate\Support\Facades\Auth;
 
 
 class UserController extends Controller
@@ -18,6 +18,8 @@ class UserController extends Controller
     {
         $this->userService = $userService;
     }
+
+
 
     public function signup(SignupRequest $request): JsonResponse
     {
@@ -135,6 +137,22 @@ class UserController extends Controller
         ]);
         $users = $this->userService->searchUserByFullName($request->user_name);
         return response()->json(['data'=>$users]);
+    }
+
+
+
+    public function storeFcmToken(Request $request)
+    {
+        $request->validate(['token' => 'required|string']);
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['message' => 'User not authenticated'], 401);
+        }
+
+        $user->fcm_token = $request->token;
+        $user->save();
+        return response()->json(['message' => 'Token saved successfully']);
     }
 
 }

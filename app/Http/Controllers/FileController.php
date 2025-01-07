@@ -3,12 +3,25 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\FileUploadRequest;
+use App\Models\Change;
+use App\Models\File;
+use App\Models\FileEdit;
+use App\Models\Fileold;
 use App\Repositories\FileRepository;
 use App\Services\FileService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use PhpOffice\PhpWord\IOFactory;
+use PhpOffice\PhpWord\Writer\PDF;
+use SebastianBergmann\Diff\Diff;
+use Spatie\PdfToText\Pdf as SpatiePdf;
+use SebastianBergmann\Diff\Differ;
+use SebastianBergmann\Diff\Output\UnifiedDiffOutputBuilder;
+
 
 class FileController extends Controller
 {
@@ -18,6 +31,7 @@ class FileController extends Controller
     {
         $this->fileService = $fileService;
     }
+
     public function uploadToGroup(FileUploadRequest $request): JsonResponse
     {
         try {
@@ -101,5 +115,40 @@ class FileController extends Controller
         return response()->json(['data' => $files], 200);
     }
 
+    public function showReportFiles(Request $request)
+    {
+        $fileName = trim($request->input('name'));
+        $groupId = $request->input('group_id');
 
+        if (empty($fileName) || empty($groupId)) {
+            return response()->json(['message' => 'File name and group ID are required.'], 400);
+        }
+
+        $files = $this->fileService->findChangeFile($fileName, $groupId);
+
+        if ($files->isEmpty()) {
+            return response()->json(['message' => 'No similar files found in the specified group.'], 404);
+        }
+
+        return response()->json(['data' => $files], 200);
+    }
+
+    public function someOtherFunction(Request $request)
+    {
+        try {
+            $request->validate([
+                'file_id' => 'required|integer',
+                'file_old_id' => 'required|integer',
+            ]);
+
+            return $this->fileService->transferFile($request);
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'error' => 'An error occurred while processing your request.',
+                'details' => $e->getMessage()
+            ], 500);
+        }
+
+}
 }

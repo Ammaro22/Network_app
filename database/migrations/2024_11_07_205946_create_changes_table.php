@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::create('changes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->nullable()->constrained('users')->cascadeOnDelete();
-            $table->foreignId('file_id')->nullable()->constrained('files')->cascadeOnDelete();
-            $table->string('old_value')->nullable();
-            $table->string('new_value')->nullable();
-            $table->string('field_name');
+            $table->foreignId('file_old_id')->constrained('file_olds')->cascadeOnDelete();
+            $table->string('file_old_name');
+            $table->string('file_new_name');
             $table->string('user_name');
+            $table->text('change')->nullable();
+            $table->string('date_checkin');
             $table->timestamps();
         });
     }
