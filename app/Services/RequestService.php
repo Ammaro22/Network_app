@@ -13,30 +13,27 @@ class RequestService
 {
 
 
-    public function getRequestsByGroupId($groupId)
+    public function getRequestsByUserGroups()
     {
         $user = auth()->user();
         if (!$user) {
             throw new \Exception('Unauthorized access. User is not logged in.');
         }
-        $group = Group::find($groupId);
-        if (!$group) {
-            throw new \Exception('Group not found.');
+        $userGroups = Group::where('user_id', $user->id)->pluck('id');
+
+        if ($userGroups->isEmpty()) {
+            throw new \Exception('No groups found for this user.');
         }
 
-
-        if ($group->user_id !== $user->id) {
-            throw new \Exception('Unauthorized access. You are not the owner of this group.');
-        }
-        Log::channel('stack')->info('show requests', [
-            'request from user'=>$group->user_id,
-            'request in group'=>$group->id,
+        Log::channel('stack')->info('show requests for user groups', [
+            'user_id' => $user->id,
+            'group_ids' => $userGroups,
             'ip_address' => request()->ip(),
             'timestamp' => now(),
         ]);
 
-        return Request::where('group_id', $groupId)->get();
-    }      //log
+        return Request::whereIn('group_id', $userGroups)->get();
+    }    //log
 
 //    public function acceptRequest($requestId)
 //    {

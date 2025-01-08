@@ -40,7 +40,7 @@ Route::delete('delete_file', [FileController::class, 'deleteFiles'])->middleware
 Route::get('get_files/{group_id}', [FileController::class, 'index'])->middleware('log');
 
 /* طلبات اضافة ملفات لمستخدمين ضمن مجموعتهم */
-Route::get('get_all_requests/{group_id}', [RequestController::class, 'index'])->middleware('auth:api');
+Route::get('get_all_requests', [RequestController::class, 'index'])->middleware('auth:api','log');
 Route::post('accept_request/{request_id}', [RequestController::class, 'accept'])->middleware('auth:api','notify','log');
 Route::delete('reject_request/{request_id}', [RequestController::class, 'reject'])->middleware('auth:api','notify','log');
 
@@ -49,7 +49,7 @@ Route::delete('reject_request/{request_id}', [RequestController::class, 'reject'
 Route::post('create_groups', [GroupController::class, 'createGroup'])->middleware('auth:api','notify','log');
 Route::post('add_users_for_group/{group_id}', [GroupController::class, 'addUsers'])->middleware('auth:api','notify','log');
 Route::delete('remove_users_from_group/{group_id}', [GroupController::class, 'removeUser'])->middleware('auth:api','notify','log');
-Route::get('get_all_groups_for_user/{group_id}', [GroupController::class, 'getgroupforUser'])->middleware('auth:api','log');
+Route::get('get_all_groups_for_user/{user_id}', [GroupController::class, 'getgroupforUser'])->middleware('log');
 Route::get('get_user_in_group/{group_id}', [GroupController::class, 'getUsers'])->middleware('auth:api');
 Route::get('get_GroupCreated_By_User', [GroupController::class, 'getGroup'])->middleware('auth:api','log');
 Route::get('get_GroupUserIn', [GroupController::class, 'getGroupUserIn'])->middleware('auth:api');

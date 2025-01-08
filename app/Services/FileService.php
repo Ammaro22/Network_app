@@ -151,7 +151,7 @@ class FileService
 
             foreach ($files as $getFile) {
                 $request = \App\Models\Request::create(['group_id' => $groupId, 'user_name' => $userName]);
-                $this->sssave([$getFile], $request->id);
+                $this->ssave([$getFile], $request->id);
             }
 
             return response()->json(['message' => 'Files added for approval successfully.'], 201);
@@ -159,7 +159,6 @@ class FileService
             return response()->json(['message' => 'Unauthorized. You do not have permission to upload files.'], 403);
         }
     }
-
 
     public function deleteFiles($fileIds, $userId)
     {

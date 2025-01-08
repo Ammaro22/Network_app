@@ -15,10 +15,10 @@ class RequestController extends Controller
         $this->requestService = $requestService;
     }
 
-    public function index($groupId)
+    public function index()
     {
         try {
-            $requests = $this->requestService->getRequestsByGroupId($groupId);
+            $requests = $this->requestService->getRequestsByUserGroups();
             return response()->json(['data'=>$requests]);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 403);
