@@ -476,7 +476,7 @@ class FileService
                 unlink($filePath);
             }
 
-            Change::where('field_name', $file->name)->delete();
+            Change::where('file_new_name', $file->name)->delete();
 
             $file->delete();
             $fileOld->delete();
