@@ -454,6 +454,7 @@ class FileService
             if (!rename($oldPath, $newFullPath)) {
                 return response()->json(['error' => 'Failed to move the file to the new directory.'], 500);
             }
+            $groupId =$fileOld->group_id;
 
             $newFile = File::create([
                 'name' => $fileOld->name,
@@ -462,7 +463,7 @@ class FileService
                 'created_at' => now(),
                 'updated_at' => now()
             ]);
-
+            $this->fileRepository->addFileToGroup($newFile->id, $groupId);
             Check::create([
                 'file_id' => $newFile->id,
                 'user_id' => $userId,
